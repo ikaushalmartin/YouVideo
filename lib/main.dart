@@ -1,15 +1,22 @@
 import 'dart:convert';
+import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:youvideo/apiservice.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'package:path_provider/path_provider.dart';
+
 import 'package:youvideo/const.dart';
 import 'package:http/http.dart' as http;
 import 'package:youvideo/videoscreen.dart';
 
-void main() {
-  runApp(MaterialApp(home: myapp()));
+String Search = "";
+void main() async {
+  runApp(
+    MaterialApp(home: myapp()),
+  );
 }
 
 class myapp extends StatefulWidget {
@@ -20,7 +27,7 @@ class myapp extends StatefulWidget {
 class _myappState extends State<myapp> {
   Constant data = Constant();
   String apikey = Constant.apikey;
-  String Search = "";
+
   var videonames = "";
   var videoid = "";
   var videothumb = "";
@@ -32,8 +39,6 @@ class _myappState extends State<myapp> {
 
   @override
   void initState() {
-    // TODO: implement initState
-    super.initState();
     this.Searchvideo();
   }
 
@@ -76,58 +81,92 @@ class _myappState extends State<myapp> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-            backgroundColor: Colors.black87,
+            backgroundColor: Colors.white,
             body: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
+                SizedBox(
+                  height: 25,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Text(
+                    "YouVideo",
+                    style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5, right: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: 300,
+                        child: TextField(
+                          onChanged: (value) {
+                            Search = value;
+                          },
+                          keyboardType: TextInputType.name,
+                          style: TextStyle(color: Color(0xff7a8c99)),
+                          textAlign: TextAlign.left,
+                          decoration: kTextFieldDecoration.copyWith(
+                              contentPadding: EdgeInsets.only(left: 20),
+                              hintText: "Search Video"),
+                        ),
                       ),
-                      width: 300,
-                      child: TextField(
-                        onChanged: (value) {
-                          Search = value;
-                        },
-                        keyboardType: TextInputType.name,
-                        style: TextStyle(color: Color(0xff7a8c99)),
-                        textAlign: TextAlign.left,
-                        decoration: kTextFieldDecoration.copyWith(
-                            contentPadding: EdgeInsets.only(left: 20),
-                            hintText: "Search Video"),
+                      ButtonTheme(
+                        child: Center(
+                          child: MaterialButton(
+                            onPressed: () {
+                              Searchvideo();
+                            },
+                            height: 42,
+                            minWidth: 40,
+                            elevation: 0,
+                            hoverElevation: 0,
+                            focusElevation: 0,
+                            highlightElevation: 0,
+                            color: Colors.black12,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Icon(Icons.search),
+                          ),
+                        ),
                       ),
-                    ),
-                    MaterialButton(
-                      onPressed: () {
-                        Searchvideo();
-                      },
-                      color: Colors.white,
-                      child: Text("Search"),
-                    )
-                  ],
+                    ],
+                  ),
                 ),
                 SizedBox(
                   height: 20,
                 ),
-                SizedBox(
-                    height: 500,
-                    child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: listofnames.length,
-                        itemBuilder: (context, index) {
-                          return getcard(
-                              listofnames[index],
-                              listofthumb[index],
-                              listofid[
-                                  index]); /*Text(
-                            "$index",
-                            style: TextStyle(color: Colors.white),
-                          );*/
-                        })),
+                Flexible(
+                  child: SizedBox(
+                      height: MediaQuery.of(context).size.height / 1.3,
+                      child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: listofnames.length,
+                          itemBuilder: (context, index) {
+                            return getcard(
+                                listofnames[index],
+                                listofthumb[index],
+                                listofid[
+                                    index]); /*Text(
+                              "$index",
+                              style: TextStyle(color: Colors.white),
+                            );*/
+                          })),
+                ),
               ],
             )));
   }
@@ -138,7 +177,8 @@ class _myappState extends State<myapp> {
     // var desc = itemdesc;
     String profileUrl = itemthumb;
     return Card(
-      elevation: 1.5,
+      color: Color(0xfff1f0f0),
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: ListTile(
@@ -178,7 +218,8 @@ class _myappState extends State<myapp> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => videoscreen(id, itemthumb)),
+                  builder: (context) =>
+                      videoscreen(id, itemthumb, fullName, Search)),
             );
           },
         ),
@@ -186,3 +227,4 @@ class _myappState extends State<myapp> {
     );
   }
 }
+//
