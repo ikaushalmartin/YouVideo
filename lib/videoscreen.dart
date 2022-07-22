@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
-import 'package:flutter/services.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
-import 'downloading_dialog.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'const.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -13,7 +12,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pod_player/pod_player.dart';
 
+import 'downloading_dialog.dart';
+
 String Search2 = "";
+ReceivePort _port = ReceivePort();
 
 class videoscreen extends StatefulWidget {
   var thubmnail;
@@ -28,19 +30,22 @@ class videoscreen extends StatefulWidget {
 
 class _videoscreenState extends State<videoscreen> {
   late final PodPlayerController controller;
+
   void initState() {
-    this.Searchvideo();
     controller = PodPlayerController(
-      playVideoFrom: PlayVideoFrom.youtube('${widget.videoid}'),
+      playVideoFrom: PlayVideoFrom.network(
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      ),
     )..initialise();
-    super.initState();
     Search2 = widget.Search1;
+    super.initState();
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    IsolateNameServer.removePortNameMapping('downloader_send_port');
     super.dispose();
+    controller.dispose();
   }
 
   Constant data = Constant();
@@ -54,7 +59,6 @@ class _videoscreenState extends State<videoscreen> {
   List listofthumb = [];
 
   bool isloading = false;
-
   Searchvideo() async {
     setState(() {
       isloading = true;
@@ -90,8 +94,6 @@ class _videoscreenState extends State<videoscreen> {
     }
   }
 
-  MethodChannel platform = new MethodChannel('backgroundservice');
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -114,37 +116,33 @@ class _videoscreenState extends State<videoscreen> {
                     fontWeight: FontWeight.bold),
               ),
             ),
-            SizedBox(
-              height: 15,
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Container(
-              color: Colors.white,
-              child: PodVideoPlayer(
-                controller: PodPlayerController(
-                  playVideoFrom: PlayVideoFrom.youtube('${widget.videoid}'),
-                  podPlayerConfig: const PodPlayerConfig(
-                    autoPlay: false,
-                    isLooping: true,
-                    initialVideoQuality: 360,
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 15),
+              child: Container(
+                width: 500,
+                color: Colors.white,
+                child: PodVideoPlayer(
+                  controller: PodPlayerController(
+                    playVideoFrom: PlayVideoFrom.youtube('${widget.videoid}'),
+                    podPlayerConfig: const PodPlayerConfig(
+                      autoPlay: false,
+                      isLooping: false,
+                      initialVideoQuality: 360,
+                    ),
+                  )..initialise(),
+                  videoThumbnail: DecorationImage(
+                    /// load from asset: AssetImage('asset_path')
+                    image: NetworkImage(
+                      '${widget.thubmnail}',
+                    ),
+                    fit: BoxFit.cover,
                   ),
-                )..initialise(),
-                videoThumbnail: DecorationImage(
-                  /// load from asset: AssetImage('asset_path')
-                  image: NetworkImage(
-                    '${widget.thubmnail}',
-                  ),
-                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            SizedBox(
-              height: 15,
-            ),
+
             Padding(
-              padding: const EdgeInsets.all(10.0),
+              padding: const EdgeInsets.only(left: 10.0, right: 10, bottom: 10),
               child: Text(
                 '${widget.name}',
                 style: TextStyle(fontSize: 18),
@@ -176,25 +174,69 @@ class _videoscreenState extends State<videoscreen> {
               ),
             ),
             SizedBox(
-              height: 3,
+              height: MediaQuery.of(context).size.height / 3.3,
             ),
-            Flexible(
-              child: SizedBox(
-                  height: MediaQuery.of(context).size.height / 1.5,
-                  child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: listofnames.length,
-                      itemBuilder: (context, index) {
-                        return getcard(
-                            listofnames[index],
-                            listofthumb[index],
-                            listofid[
-                                index]); /*Text(
-                              "$index",
-                              style: TextStyle(color: Colors.white),
-                            );*/
-                      })),
-            ),
+            Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Made With ❤ By"),
+                    Text(
+                      " Martin Kaushal",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ],
+                )),
+
+            Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    MaterialButton(
+                      splashColor: Colors.transparent,
+                      minWidth: 5,
+                      onPressed: () {
+                        launch('https://www.instagram.com/i.kaushalmartin/');
+                      },
+                      child: Image.asset(
+                        'images/instagram.png',
+                        scale: 20,
+                      ),
+                    ),
+                    MaterialButton(
+                      splashColor: Colors.transparent,
+                      minWidth: 5,
+                      onPressed: () {
+                        launch(
+                            'https://www.linkedin.com/in/martin-kaushal-7689761bb');
+                      },
+                      child: Image.asset(
+                        'images/linkedin.png',
+                        scale: 20,
+                      ),
+                    )
+                  ],
+                )),
+            // SizedBox(
+            //     height: MediaQuery.of(context).size.height / 1.5,
+            //     child: ListView.builder(
+            //         shrinkWrap: true,
+            //         itemCount: listofnames.length,
+            //         itemBuilder: (context, index) {
+            //           return getcard(
+            //               listofnames[index],
+            //               listofthumb[index],
+            //               listofid[
+            //                   index]); /*Text(
+            //                 "$index",
+            //                 style: TextStyle(color: Colors.white),
+            //               );*/
+            //         })),
           ],
         ),
       ),
