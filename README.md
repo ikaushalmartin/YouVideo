@@ -7,7 +7,7 @@ A Video Streaming Application
 A video streaming application having data of youtube but have addition functionality of downloding video without paying any single penny and also it is ad-free ;)
 
 ### Packages Used:
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.2 /n
   http: ^0.13.4
   cached_network_image: ^3.2.1
   pod_player: ^0.0.8
